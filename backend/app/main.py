@@ -48,12 +48,18 @@ app.include_router(assistant.router)
 BASE_DIR = Path(__file__).resolve().parents[2]
 FRONTEND_DIST = BASE_DIR / "frontend" / "dist"
 
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parents[2]
+FRONTEND_DIST = BASE_DIR / "frontend" / "dist"
+
 app.mount(
     "/",
     StaticFiles(directory=str(FRONTEND_DIST), html=True),
     name="frontend"
 )
 
-@app.get("/")
-def root():
+@app.get("/health")
+def health():
     return {"name": settings.APP_NAME, "status": "running"}
