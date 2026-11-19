@@ -5,6 +5,9 @@ from app.db.session import engine, Base, SessionLocal
 from app.db.migrations import migrate_existing_schema
 from app.api.routers import auth, users, profiles, opportunities, matching, applications, schedules, tasks, participation, feedback, analytics, assistant, saved, notifications
 from app.seed.seed_data import seed_if_empty
+from pathlib import Path
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 app = FastAPI(title=settings.APP_NAME)
 
@@ -40,6 +43,16 @@ app.include_router(saved.router)
 app.include_router(notifications.router)
 app.include_router(analytics.router)
 app.include_router(assistant.router)
+
+# Serve React frontend
+BASE_DIR = Path(__file__).resolve().parents[2]
+FRONTEND_DIST = BASE_DIR / "frontend" / "dist"
+
+app.mount(
+    "/",
+    StaticFiles(directory=str(FRONTEND_DIST), html=True),
+    name="frontend"
+)
 
 @app.get("/")
 def root():
