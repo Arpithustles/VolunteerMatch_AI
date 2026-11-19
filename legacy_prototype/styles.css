@@ -1,0 +1,27 @@
+body {
+  font-family: 'Inter', sans-serif;
+}
+
+.cert-serif {
+  font-family: 'Playfair Display', serif;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #certificatePrintableArea,
+  #certificatePrintableArea * {
+    visibility: visible;
+  }
+  #certificatePrintableArea {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    box-shadow: none !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}

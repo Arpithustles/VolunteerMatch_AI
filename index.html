@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VolunteerMatch AI — Community & NGO Volunteering Platform</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased">
+
+  <!-- ==================== 1. DUAL-POV AUTH SCREEN ==================== -->
+  <div id="authScreen" class="min-h-screen flex flex-col lg:flex-row">
+    <!-- Left Showcase -->
+    <div class="lg:w-1/2 bg-gradient-to-br from-emerald-900 via-teal-800 to-slate-900 text-white p-8 lg:p-16 flex flex-col justify-between relative overflow-hidden">
+      <div class="relative z-10">
+        <div class="flex items-center gap-3 mb-10">
+          <div class="w-10 h-10 rounded-xl bg-emerald-400 text-slate-950 flex items-center justify-center font-extrabold text-xl shadow-lg">V</div>
+          <span class="text-xl font-bold tracking-tight">VolunteerMatch <span class="text-emerald-300">AI</span></span>
+        </div>
+        <h1 class="text-3xl lg:text-5xl font-extrabold leading-tight mb-6">
+          Right Volunteer.<br/>Right Cause.<br/><span class="text-emerald-300">Verified Impact.</span>
+        </h1>
+        <p class="text-emerald-100/90 text-base lg:text-lg max-w-md leading-relaxed">
+          An intelligent coordination platform connecting passionate volunteers with verified NGOs through explainable skill-and-schedule matching.
+        </p>
+      </div>
+
+      <div class="relative z-10 grid grid-cols-3 gap-4 pt-10 border-t border-white/15 mt-12">
+        <div>
+          <p class="text-2xl lg:text-3xl font-extrabold text-emerald-300">94%</p>
+          <p class="text-xs text-emerald-100/80 mt-1">Match Accuracy</p>
+        </div>
+        <div>
+          <p class="text-2xl lg:text-3xl font-extrabold text-emerald-300">120+</p>
+          <p class="text-xs text-emerald-100/80 mt-1">Partner NGOs</p>
+        </div>
+        <div>
+          <p class="text-2xl lg:text-3xl font-extrabold text-emerald-300">100%</p>
+          <p class="text-xs text-emerald-100/80 mt-1">Verified Certificates</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Dual-POV Login Box -->
+    <div class="lg:w-1/2 flex items-center justify-center p-6 sm:p-12 bg-white">
+      <div class="w-full max-w-md">
+        <span class="inline-block px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold mb-3">Welcome Back</span>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-2">Sign in to your portal</h2>
+        <p class="text-sm text-slate-500 mb-6">Choose your account role to access your personalized workspace.</p>
+
+        <!-- Role Toggle -->
+        <div class="grid grid-cols-2 gap-2 p-1.5 bg-slate-100 rounded-xl mb-6">
+          <button type="button" id="roleBtnVolunteer" onclick="selectAuthRole('volunteer')" class="py-2.5 px-4 rounded-lg text-sm font-semibold transition bg-white text-emerald-700 shadow-sm">
+            I am a Volunteer
+          </button>
+          <button type="button" id="roleBtnNgo" onclick="selectAuthRole('ngo')" class="py-2.5 px-4 rounded-lg text-sm font-semibold transition text-slate-600 hover:text-slate-900">
+            I am an NGO
+          </button>
+        </div>
+
+        <!-- Login Form -->
+        <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5" id="loginNameLabel">Full Name</label>
+            <input type="text" id="loginName" value="Archita Katiyar" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-medium" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Email Address</label>
+            <input type="email" id="loginEmail" value="archita.katiyar@volunteer.org" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-medium" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Password</label>
+            <input type="password" id="loginPassword" value="••••••••••••" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-medium" />
+          </div>
+          <button type="submit" id="loginSubmitBtn" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm shadow-md shadow-emerald-600/20 transition cursor-pointer">
+            Continue as Volunteer →
+          </button>
+        </form>
+
+        <div class="mt-6 pt-5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <span>Quick Demo Access</span>
+          <button type="button" onclick="quickSwitchDemo()" class="text-emerald-700 font-semibold hover:underline cursor-pointer" id="quickDemoHint">
+            Switch to NGO Coordinator Login
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 2. MAIN APP SHELL ==================== -->
+  <div id="appShell" class="hidden min-h-screen flex flex-col">
+    <!-- Top Navigation Bar -->
+    <header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+        <!-- Brand -->
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-extrabold text-lg">V</div>
+          <div>
+            <span class="font-bold text-slate-900 tracking-tight">VolunteerMatch <span class="text-emerald-600">AI</span></span>
+            <span id="roleBadge" class="ml-2 px-2 py-0.5 text-[11px] font-semibold rounded-full bg-emerald-50 text-emerald-700">Volunteer</span>
+          </div>
+        </div>
+
+        <!-- Volunteer Navigation Pills -->
+        <nav id="volunteerNav" class="hidden md:flex items-center gap-1 bg-slate-100 p-1 rounded-full">
+          <button onclick="switchVolTab('discover')" id="tab-discover" class="vol-tab px-4 py-1.5 rounded-full text-sm font-semibold bg-white text-emerald-700 shadow-sm transition cursor-pointer">Discover Drives</button>
+          <button onclick="switchVolTab('schedule')" id="tab-schedule" class="vol-tab px-4 py-1.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 transition cursor-pointer">My Schedule & Tasks</button>
+          <button onclick="switchVolTab('impact')" id="tab-impact" class="vol-tab px-4 py-1.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 transition cursor-pointer">Impact & Certificate</button>
+        </nav>
+
+        <!-- NGO Navigation Pills -->
+        <nav id="ngoNav" class="hidden items-center gap-1 bg-slate-100 p-1 rounded-full">
+          <button onclick="switchNgoTab('drives')" id="ntab-drives" class="ngo-tab px-4 py-1.5 rounded-full text-sm font-semibold bg-white text-teal-700 shadow-sm transition cursor-pointer">Posted Drives</button>
+          <button onclick="switchNgoTab('create')" id="ntab-create" class="ngo-tab px-4 py-1.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 transition cursor-pointer">+ Post Opportunity</button>
+          <button onclick="switchNgoTab('roster')" id="ntab-roster" class="ngo-tab px-4 py-1.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 transition cursor-pointer">Volunteer Roster</button>
+        </nav>
+
+        <!-- Right Controls -->
+        <div class="flex items-center gap-2.5">
+          <button id="editPrefsBtn" onclick="togglePrefsDrawer(true)" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-slate-200 hover:border-emerald-300 bg-white text-xs font-semibold text-slate-700 transition cursor-pointer">
+            <span>⚙ Preferences</span>
+          </button>
+          <button onclick="logoutToAuth()" class="px-3.5 py-1.5 rounded-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition cursor-pointer">
+            Switch Role / Logout
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Tab Bar -->
+      <div id="mobileVolNav" class="md:hidden flex border-t border-slate-100 bg-white px-4 py-2 gap-2 overflow-x-auto">
+        <button onclick="switchVolTab('discover')" class="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">Discover</button>
+        <button onclick="switchVolTab('schedule')" class="px-3 py-1 rounded-full text-xs font-semibold text-slate-600">Schedule</button>
+        <button onclick="switchVolTab('impact')" class="px-3 py-1 rounded-full text-xs font-semibold text-slate-600">Certificates</button>
+        <button onclick="togglePrefsDrawer(true)" class="px-3 py-1 rounded-full text-xs font-semibold text-slate-600">Preferences</button>
+      </div>
+    </header>
+
+    <!-- ==================== VOLUNTEER WORKSPACE ==================== -->
+    <main id="volunteerWorkspace" class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      
+      <!-- TAB 1: DISCOVER DRIVES -->
+      <section id="view-discover">
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-wider text-emerald-600 mb-1">AI-Ranked Opportunities</p>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900">Recommended Drives for <span id="volGreetingName">Archita</span></h1>
+            <p class="text-sm text-slate-500 mt-1" id="activeContextSummary">Matched by Skills: Teaching, Web Dev, First Aid • Availability: Weekends</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <select id="causeFilter" onchange="renderOpportunities()" class="px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+              <option value="All">All Causes</option>
+              <option value="Education">Education & Literacy</option>
+              <option value="Environment">Environment & Cleanups</option>
+              <option value="Healthcare">Healthcare & Blood Drives</option>
+              <option value="Digital Literacy">Digital Empowerment</option>
+            </select>
+            <button onclick="togglePrefsDrawer(true)" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold shadow-sm transition cursor-pointer">
+              Tune AI Match
+            </button>
+          </div>
+        </div>
+
+        <div id="opportunitiesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+      </section>
+
+      <!-- TAB 2: MY SCHEDULE & TASKS -->
+      <section id="view-schedule" class="hidden">
+        <div class="mb-6">
+          <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900">My Schedule & Assigned Tasks</h1>
+          <p class="text-sm text-slate-500 mt-1">Manage accepted NGO commitments, resolve time clashes, and complete tasks to log verified hours.</p>
+        </div>
+
+        <div id="conflictBanner" class="hidden mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 flex items-start gap-3">
+          <span class="text-xl">⚠️</span>
+          <div>
+            <h3 class="text-sm font-bold text-amber-900">Schedule Clash Detected</h3>
+            <p class="text-xs text-amber-800 mt-0.5" id="conflictDetails"></p>
+          </div>
+        </div>
+
+        <div id="scheduleList" class="space-y-4"></div>
+      </section>
+
+      <!-- TAB 3: IMPACT & CERTIFICATE -->
+      <section id="view-impact" class="hidden">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900">Impact Log & Official Certificates</h1>
+            <p class="text-sm text-slate-500 mt-1">Download verified NGO service certificates for completed drives or your consolidated portfolio.</p>
+          </div>
+          <button onclick="openCertificateModal('consolidated')" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold shadow-md shadow-emerald-600/20 transition cursor-pointer">
+            🎓 Generate Consolidated Service Certificate
+          </button>
+        </div>
+
+        <!-- Summary KPI Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Verified Hours</p>
+            <p class="text-3xl font-extrabold text-slate-900 mt-2" id="statTotalHours">14 hrs</p>
+            <p class="text-xs text-emerald-600 font-medium mt-1">Across verified partner NGOs</p>
+          </div>
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Drives Completed</p>
+            <p class="text-3xl font-extrabold text-slate-900 mt-2" id="statDrivesCount">2</p>
+            <p class="text-xs text-slate-500 mt-1">100% attendance record</p>
+          </div>
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Community Tier</p>
+            <p class="text-3xl font-extrabold text-emerald-600 mt-2" id="statTier">Civic Champion</p>
+            <p class="text-xs text-slate-500 mt-1">Eligible for NGO Recommendation Letter</p>
+          </div>
+        </div>
+
+        <!-- Participation History Table -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+            <h2 class="font-bold text-slate-900">Verified Participation History</h2>
+            <span class="text-xs text-slate-400">Click any entry to preview or download certificate</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                  <th class="py-3.5 px-6">Opportunity & NGO</th>
+                  <th class="py-3.5 px-6">Date</th>
+                  <th class="py-3.5 px-6">Hours Logged</th>
+                  <th class="py-3.5 px-6">Certificate ID</th>
+                  <th class="py-3.5 px-6 text-right">Official Certificate</th>
+                </tr>
+              </thead>
+              <tbody id="impactTableBody" class="divide-y divide-slate-100 text-sm"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ==================== NGO ORGANIZER WORKSPACE ==================== -->
+    <main id="ngoWorkspace" class="hidden flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- NGO TAB 1: POSTED DRIVES -->
+      <section id="nview-drives">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-wider text-teal-600 mb-1">NGO Coordinator Dashboard</p>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900" id="ngoHeadingName">Udaan Welfare Foundation</h1>
+            <p class="text-sm text-slate-500 mt-1">Manage active community drives, track volunteer slots, and verify participation.</p>
+          </div>
+          <button onclick="switchNgoTab('create')" class="px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold shadow-sm transition cursor-pointer">
+            + Post New Opportunity
+          </button>
+        </div>
+
+        <div id="ngoDrivesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+      </section>
+
+      <!-- NGO TAB 2: POST NEW OPPORTUNITY -->
+      <section id="nview-create" class="hidden max-w-2xl mx-auto">
+        <div class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm">
+          <h2 class="text-2xl font-extrabold text-slate-900 mb-1">Publish a Volunteering Opportunity</h2>
+          <p class="text-sm text-slate-500 mb-6">New drives are immediately indexed by the AI Match Engine for matching volunteers.</p>
+
+          <form onsubmit="handleCreateOpportunity(event)" class="space-y-4">
+            <div>
+              <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Opportunity Title</label>
+              <input type="text" id="newOppTitle" placeholder="e.g., Weekend STEM Coding Bootcamp" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm" />
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Cause Category</label>
+                <select id="newOppCause" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-white">
+                  <option value="Education">Education</option>
+                  <option value="Environment">Environment</option>
+                  <option value="Healthcare">Healthcare</option>
+                  <option value="Digital Literacy">Digital Literacy</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Schedule Slot</label>
+                <select id="newOppSlot" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-white">
+                  <option value="Weekends">Weekends</option>
+                  <option value="Weekday Evenings">Weekday Evenings</option>
+                  <option value="Flexible Remote">Flexible Remote</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Event Date</label>
+                <input type="text" id="newOppDate" value="Sat, 28 Nov 2026" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Location</label>
+                <input type="text" id="newOppLocation" value="Ghaziabad / NCR" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Service Hours</label>
+                <input type="number" id="newOppHours" value="5" min="1" max="24" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm" />
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Required Skills (comma-separated)</label>
+              <input type="text" id="newOppSkills" placeholder="e.g., Teaching, Python, Communication" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Description</label>
+              <textarea id="newOppDesc" rows="3" placeholder="Describe volunteer responsibilities and community impact..." required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm"></textarea>
+            </div>
+            <div class="pt-2 flex justify-end gap-3">
+              <button type="button" onclick="switchNgoTab('drives')" class="px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600">Cancel</button>
+              <button type="submit" class="px-6 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold shadow-sm cursor-pointer">Publish Drive</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- NGO TAB 3: VOLUNTEER ROSTER -->
+      <section id="nview-roster" class="hidden">
+        <div class="mb-6">
+          <h2 class="text-2xl font-extrabold text-slate-900">Registered Volunteer Roster</h2>
+          <p class="text-sm text-slate-500 mt-1">Verify volunteer attendance and issue digital service certificates.</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                <th class="py-3.5 px-6">Volunteer</th>
+                <th class="py-3.5 px-6">Assigned Drive</th>
+                <th class="py-3.5 px-6">Skills</th>
+                <th class="py-3.5 px-6">Status</th>
+                <th class="py-3.5 px-6 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody id="ngoRosterBody" class="divide-y divide-slate-100 text-sm"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ==================== 3. SLIDE-OVER PREFERENCES DRAWER ==================== -->
+  <div id="prefsDrawer" class="fixed inset-0 z-50 hidden">
+    <div onclick="togglePrefsDrawer(false)" class="absolute inset-0 bg-slate-900/40 backdrop-blur-xs"></div>
+    <div class="absolute right-0 top-0 bottom-0 w-full max-w-md bg-white shadow-2xl p-6 sm:p-8 overflow-y-auto flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+          <div>
+            <h3 class="text-lg font-extrabold text-slate-900">AI Match Preferences</h3>
+            <p class="text-xs text-slate-500">Update your profile to recalculate match scores live</p>
+          </div>
+          <button onclick="togglePrefsDrawer(false)" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 font-bold cursor-pointer">✕</button>
+        </div>
+
+        <div class="mt-6 space-y-6">
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Your Skills</label>
+            <div id="skillPillsContainer" class="flex flex-wrap gap-2"></div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Preferred Causes</label>
+            <div id="interestPillsContainer" class="flex flex-wrap gap-2"></div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Weekly Availability</label>
+            <select id="prefAvailability" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium bg-white">
+              <option value="Weekends">Weekends (Sat - Sun)</option>
+              <option value="Weekday Evenings">Weekday Evenings (After 5 PM)</option>
+              <option value="Flexible Remote">Flexible / Remote Hours</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-6 border-t border-slate-100 flex gap-3">
+        <button onclick="savePreferences()" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm shadow-md transition cursor-pointer">
+          Apply & Recalculate Matches
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 4. OFFICIAL CERTIFICATE MODAL ==================== -->
+  <div id="certModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
+    <div class="bg-white rounded-2xl max-w-4xl w-full shadow-2xl overflow-hidden my-8">
+      <!-- Modal Top Bar -->
+      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between no-print">
+        <span class="text-sm font-semibold">Official Community Service Certificate Preview</span>
+        <div class="flex items-center gap-2.5">
+          <button onclick="downloadCertificateHTML()" class="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-xs font-semibold transition cursor-pointer">
+            ⬇ Download Certificate
+          </button>
+          <button onclick="window.print()" class="px-3.5 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-xs font-semibold transition cursor-pointer">
+            🖨 Print / Save PDF
+          </button>
+          <button onclick="closeCertificateModal()" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-sm font-bold cursor-pointer">✕</button>
+        </div>
+      </div>
+
+      <!-- Certificate Canvas -->
+      <div class="p-6 sm:p-10 bg-stone-100">
+        <div id="certificatePrintableArea" class="bg-white border-8 border-double border-emerald-800 p-8 sm:p-12 relative shadow-inner text-center">
+          <div class="border border-amber-500/50 p-6 sm:p-10">
+            <p class="text-xs font-bold uppercase tracking-[0.25em] text-emerald-700 mb-2">VolunteerMatch AI • Verified Partner Network</p>
+            <h2 class="cert-serif text-3xl sm:text-5xl font-bold text-slate-900 tracking-tight mb-3">Certificate of Community Service</h2>
+            <p class="text-sm text-slate-500 italic mb-6">This credential is proudly awarded to</p>
+
+            <p id="certVolunteerName" class="cert-serif text-3xl sm:text-4xl font-bold text-emerald-800 border-b-2 border-slate-200 inline-block px-8 pb-2 mb-6">
+              Archita Katiyar
+            </p>
+
+            <p id="certBodyText" class="text-sm sm:text-base text-slate-700 max-w-2xl mx-auto leading-relaxed mb-8">
+              In recognition of dedicated voluntary service and community contribution during the <strong>Weekend Digital Literacy Camp</strong> organized by <strong>Udaan Welfare Foundation</strong>, completing <strong>8 verified service hours</strong>.
+            </p>
+
+            <div class="grid grid-cols-3 gap-4 items-end pt-6 border-t border-slate-200 text-left sm:text-center">
+              <div>
+                <p id="certIssueDate" class="text-sm font-bold text-slate-800">12 Nov 2026</p>
+                <p class="text-[11px] uppercase tracking-wider text-slate-400 mt-0.5">Date of Issue</p>
+              </div>
+              <div class="flex flex-col items-center">
+                <div class="w-16 h-16 rounded-full border-2 border-amber-600 bg-amber-50 flex items-center justify-center text-[10px] font-extrabold text-amber-800 uppercase tracking-tighter text-center leading-tight shadow-xs">
+                  VERIFIED<br/>NGO SEAL
+                </div>
+                <p id="certVerifyId" class="text-[10px] font-mono text-slate-500 mt-1.5">ID: VM-2026-8841</p>
+              </div>
+              <div>
+                <p class="cert-serif italic text-lg font-semibold text-slate-800">R. K. Sharma</p>
+                <p class="text-[11px] uppercase tracking-wider text-slate-400 mt-0.5">Program Director, Partner NGO</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
