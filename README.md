@@ -33,7 +33,7 @@ Do not configure `VITE_API_BASE_URL` on Render for this single-origin setup. Fro
 Render settings (repository root as the service root directory):
 
 ```sh
-Build Command: cd frontend && npm install && npm run build && cd ../backend && pip install -r requirements.txt
+Build Command: cd frontend && npm ci --include=dev && npm run build && cd ../backend && pip install -r requirements.txt
 Start Command: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
 ```
 
