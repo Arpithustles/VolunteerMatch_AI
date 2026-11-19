@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: volunteermatch-ai
+    runtime: python
+    plan: free
+    buildCommand: cd frontend && npm install && npm run build && cd ../backend && pip install -r requirements.txt
+    startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: NODE_VERSION
+        value: 24.22.1
+      - key: ENVIRONMENT
+        value: production
+      - key: SEED_DEMO_DATA
+        value: "false"
+      - key: DATABASE_URL
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: ""
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_BASE_URL
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-4o-mini

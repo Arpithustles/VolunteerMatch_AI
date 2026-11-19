@@ -8,6 +8,43 @@ Volunteers can discover opportunities, receive explainable AI matches, apply, ge
 
 ---
 
+## Single-service Render deployment
+
+The root-level `render.yaml` configures one Python web service. The FastAPI process serves both the API and the built Vite application from the same origin; Vite assets are served under `/assets`, and client-side routes fall back to `index.html`. Unknown API routes remain JSON 404 responses.
+
+Create a persistent PostgreSQL database in Render (or use an existing reachable PostgreSQL instance) and set these web-service environment variables:
+
+| Variable | Required | Notes |
+| --- | --- | --- |
+| `DATABASE_URL` | Yes | Render PostgreSQL internal URL preferred. `postgres://` and `postgresql://` URLs are normalized to the psycopg 3 driver. |
+| `SECRET_KEY` | Yes | Render Blueprint generates a secret. If configuring manually, use a cryptographically random value of at least 32 characters. |
+| `ENVIRONMENT` | Yes | Set to `production`; production startup rejects the development secret and SQLite. |
+| `SEED_DEMO_DATA` | Yes | Set to `false` so production does not create predictable demo accounts. |
+| `OPENAI_API_KEY` | Optional | Needed only for the external OpenAI-compatible assistant provider. |
+| `OPENAI_BASE_URL` | Optional | OpenAI-compatible API base URL; defaults to OpenAI. |
+| `OPENAI_MODEL` | Optional | Defaults to `gpt-4o-mini`. |
+| `CORS_ORIGINS` | Optional | Comma-separated trusted origins for cross-origin clients. Same-origin deployment does not require CORS. |
+| `ALGORITHM` | Optional | JWT signing algorithm; defaults to `HS256`. |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Optional | JWT lifetime; defaults to 1440. |
+| `MATCH_WEIGHTS` | Optional | JSON weights for matching factors; defaults to the documented 30/20/15/10/10/10/5 baseline. |
+
+Do not configure `VITE_API_BASE_URL` on Render for this single-origin setup. Frontend variables are bundled into public browser assets; never put credentials or provider secrets in `VITE_*` variables.
+
+Render settings (repository root as the service root directory):
+
+```sh
+Build Command: cd frontend && npm install && npm run build && cd ../backend && pip install -r requirements.txt
+Start Command: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+```
+
+The startup path applies the existing additive schema update and creates missing tables without dropping data. The frontend build must complete before Uvicorn starts. The Render free web tier may spin down while idle; use a persistent PostgreSQL database because local filesystem storage is not durable.
+
+Production deployment still requires configuring a persistent PostgreSQL instance and (if desired) an OpenAI API key. The current schema startup logic is not a versioned Alembic migration workflow.
+
+With demo seeding disabled, create the first administrator once after the service has initialized the database: open a Render shell (or a trusted machine with private database access), enter `backend`, and run `python -m app.seed.bootstrap_admin`. The command prompts for the administrator email, name and a hidden password; it refuses to create duplicate accounts or a second initial administrator. Do not enable demo seeding in production to obtain an admin account.
+
+---
+
 ## Highlights
 
 - **Premium public experience** — navy/emerald visual identity, editorial hero, photography-led category cards, live database statistics, featured opportunities and search filters.
@@ -30,7 +67,7 @@ Volunteers can discover opportunities, receive explainable AI matches, apply, ge
 | -------- | ----------------------------------------------------------------- |
 | Frontend | React 18, TypeScript, Vite, Tailwind CSS, React Router, Recharts   |
 | Backend  | FastAPI, SQLAlchemy 2, Pydantic, JWT (python-jose), passlib bcrypt |
-| Database | SQLite for local development (`backend/dev.db`)                   |
+| Database | PostgreSQL in production; SQLite for local development             |
 | Testing  | Pytest + FastAPI TestClient                                       |
 
 ---
@@ -85,7 +122,7 @@ pip install -r requirements.txt
 .\.venv\Scripts\python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-The database is created automatically at `backend/dev.db` and seeded on first startup.
+The database schema is created automatically on startup. Demo data is seeded by default in development; set `SEED_DEMO_DATA=false` in production.
 
 - API: <http://127.0.0.1:8000>
 - Interactive docs: <http://127.0.0.1:8000/docs>
@@ -100,7 +137,7 @@ npm install
 npm run dev
 ```
 
-Open <http://localhost:5173>. The frontend uses `VITE_API_BASE_URL` if set, otherwise `http://localhost:8000`.
+Open <http://localhost:5173>. In development, Vite proxies API requests to `http://127.0.0.1:8000`. Set `VITE_API_BASE_URL` only when intentionally using a separate API origin; leave it unset for same-origin production deployments.
 
 ### Reset the demo database
 
@@ -210,7 +247,7 @@ cd backend
 .\.venv\Scripts\python -m pytest -q
 ```
 
-Current suite: **10 passed** covering authentication, role protection, opportunity management, matching, applications, schedule/task/participation flows and public analytics.
+The suite covers authentication, role protection, opportunity management, matching, applications, schedule/task/participation flows, SPA deployment routes, and PostgreSQL URL normalization.
 
 Frontend checks:
 

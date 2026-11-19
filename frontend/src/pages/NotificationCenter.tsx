@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Bell, CheckCheck, ExternalLink, Trash2 } from "lucide-react";
 import { api } from "../api/client";
+import { errorMessage } from "../api/types";
 import { Card, PageHeader, Spinner } from "../components/UI";
 import { useNavigate } from "react-router-dom";
 
@@ -16,8 +17,8 @@ export default function NotificationCenter() {
       const result = await api.get<{ items: NotificationItem[] }>("/notifications");
       setItems(result.items);
       setError("");
-    } catch (e: any) {
-      setError(e.message || "Could not load notifications");
+    } catch (error: unknown) {
+      setError(errorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -27,16 +28,16 @@ export default function NotificationCenter() {
     try {
       await api.patch(`/notifications/${item.id}/read`);
       await load();
-    } catch (e: any) {
-      setError(e.message || "Could not update notification");
+    } catch (error: unknown) {
+      setError(errorMessage(error));
     }
   };
   const remove = async (id: number) => {
     try {
       await api.del(`/notifications/${id}`);
       await load();
-    } catch (e: any) {
-      setError(e.message || "Could not delete notification");
+    } catch (error: unknown) {
+      setError(errorMessage(error));
     }
   };
   if (loading) return <Spinner />;
@@ -46,7 +47,7 @@ export default function NotificationCenter() {
     <Card>
       <div className="flex items-center justify-between border-b border-slate-100 p-4 dark:border-slate-800">
         <p className="text-sm text-slate-500">{items.filter((item) => !item.is_read).length} unread</p>
-        <button type="button" onClick={async () => { try { await api.post("/notifications/read-all"); await load(); } catch (e: any) { setError(e.message); } }} className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-700"><CheckCheck className="h-4 w-4" />Mark all as read</button>
+        <button type="button" onClick={async () => { try { await api.post("/notifications/read-all"); await load(); } catch (error: unknown) { setError(errorMessage(error)); } }} className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-700"><CheckCheck className="h-4 w-4" />Mark all as read</button>
       </div>
       {items.length === 0 ? <div className="p-10 text-center text-sm text-slate-500"><Bell className="mx-auto mb-2 h-6 w-6" />No notifications yet.</div> : items.map((item) => <article key={item.id} className={`flex items-start gap-4 border-b border-slate-100 p-4 last:border-0 dark:border-slate-800 ${item.is_read ? "" : "bg-emerald-50/50 dark:bg-emerald-950/20"}`}>
         <div className="min-w-0 flex-1">

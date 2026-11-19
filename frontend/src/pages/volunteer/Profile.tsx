@@ -1,10 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { api } from "../../api/client";
+import { errorMessage } from "../../api/types";
 import { useToast } from "../../components/Toast";
 import { Card, PageHeader, Spinner, ErrorState, Progress } from "../../components/UI";
-import { CheckCircle2, Save, ShieldCheck } from "lucide-react";
+import { Save, ShieldCheck } from "lucide-react";
 
-type Profile = Record<string, any> & { completion_percentage?: number; missing_sections?: string[] };
+type ProfileValue = string | boolean | number | null;
+type Profile = {
+  [key: string]: ProfileValue | string[] | undefined;
+  completion_percentage?: number;
+  missing_sections?: string[];
+};
 
 const categories = [
   "NGOs and Social Work", "Concerts and Music Festivals", "College Fests", "Cultural Events",
@@ -42,8 +48,12 @@ const tabs = [
 ];
 const inputClass = "w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm dark:border-slate-700 dark:bg-slate-950";
 
-function split(value: string | undefined) {
-  return (value || "").split(",").map((item) => item.trim()).filter(Boolean);
+function textValue(value: unknown): string {
+  return typeof value === "string" || typeof value === "number" ? String(value) : "";
+}
+
+function split(value: unknown) {
+  return textValue(value).split(",").map((item) => item.trim()).filter(Boolean);
 }
 
 export default function VolunteerProfile() {
@@ -69,21 +79,25 @@ export default function VolunteerProfile() {
       setForm(profile);
       setCompletion(profile.completion_percentage || 0);
       setMissing(profile.missing_sections || []);
-    } catch (e: any) {
-      setError(e.message);
+    } catch (error: unknown) {
+      setError(errorMessage(error));
     } finally {
       setLoading(false);
     }
   };
   useEffect(() => { load(); }, []);
 
-  const set = (key: string, value: any) => setForm((current) => ({ ...current, [key]: value }));
-  const professionData = (() => {
+  const set = (key: string, value: ProfileValue) => setForm((current) => ({ ...current, [key]: value }));
+  const professionData: Record<string, string> = (() => {
     try {
-      const parsed = JSON.parse(form.profession_details || "{}");
-      return typeof parsed === "object" && parsed !== null ? parsed : {};
+      const parsed: unknown = JSON.parse(textValue(form.profession_details) || "{}");
+      if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return {};
+      return Object.fromEntries(
+        Object.entries(parsed).filter((entry): entry is [string, string] => typeof entry[1] === "string"),
+      );
     } catch {
-      return form.profession_details ? { other_profession_details: form.profession_details } : {};
+      const details = textValue(form.profession_details);
+      return details ? { other_profession_details: details } : {};
     }
   })();
   const setProfessionDetail = (key: string, value: string) => {
@@ -103,8 +117,8 @@ export default function VolunteerProfile() {
       setCompletion(profile.completion_percentage || 0);
       setMissing(profile.missing_sections || []);
       push("Profile saved. Your recommendations will use the updated information.", "success");
-    } catch (e: any) {
-      push(e.message, "error");
+    } catch (error: unknown) {
+      push(errorMessage(error), "error");
     } finally {
       setSaving(false);
     }
@@ -113,8 +127,8 @@ export default function VolunteerProfile() {
     try {
       await api.post("/profiles/volunteer/consent", declarations);
       push("Your declarations and consent choices have been recorded.", "success");
-    } catch (e: any) {
-      push(e.message, "error");
+    } catch (error: unknown) {
+      push(errorMessage(error), "error");
     }
   };
   const updateSafetyAnswer = async (answer: string) => {
@@ -122,8 +136,8 @@ export default function VolunteerProfile() {
       await api.patch("/profiles/volunteer/safety-declaration", { answer });
       set("safety_declaration", answer);
       push("Safety declaration saved. This is not a police background check.", "success");
-    } catch (e: any) {
-      push(e.message, "error");
+    } catch (error: unknown) {
+      push(errorMessage(error), "error");
     }
   };
 
@@ -133,13 +147,13 @@ export default function VolunteerProfile() {
   const textField = (key: string, label: string, options: { placeholder?: string; type?: string } = {}) => (
     <label key={key} className="block">
       <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">{label}</span>
-      <input type={options.type || "text"} value={form[key] || ""} onChange={(event) => set(key, event.target.value)} placeholder={options.placeholder} className={inputClass} />
+      <input type={options.type || "text"} value={textValue(form[key])} onChange={(event) => set(key, event.target.value)} placeholder={options.placeholder} className={inputClass} />
     </label>
   );
   const textarea = (key: string, label: string, placeholder = "") => (
     <label key={key} className="block">
       <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">{label}</span>
-      <textarea rows={3} value={form[key] || ""} onChange={(event) => set(key, event.target.value)} placeholder={placeholder} className={inputClass} />
+      <textarea rows={3} value={textValue(form[key])} onChange={(event) => set(key, event.target.value)} placeholder={placeholder} className={inputClass} />
     </label>
   );
 
@@ -160,7 +174,7 @@ export default function VolunteerProfile() {
         </Card>
         <Card className="flex items-center gap-3 p-5">
           <ShieldCheck className="h-8 w-8 shrink-0 text-emerald-600" />
-          <div><p className="font-bold text-slate-900 dark:text-white">Verification status</p><p className="text-sm capitalize text-slate-500">{form.verification_status || "Not submitted"}</p></div>
+          <div><p className="font-bold text-slate-900 dark:text-white">Verification status</p><p className="text-sm capitalize text-slate-500">{textValue(form.verification_status) || "Not submitted"}</p></div>
         </Card>
       </div>
 
@@ -187,29 +201,29 @@ export default function VolunteerProfile() {
           <section className="space-y-5 p-5">
             <div><h2 className="font-bold text-slate-900 dark:text-white">Identity & trust verification</h2><p className="mt-1 text-sm text-slate-500">Verification is optional unless an event has a lawful, role-specific requirement. Self-declaration is not a police clearance.</p></div>
             <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">For your safety, this version does not upload identity documents or accept Aadhaar numbers/images. Use only a legally permitted, secure verification process; never submit an unmasked Aadhaar document here.</div>
-            <label className="block max-w-sm"><span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">Safety declaration</span><select value={form.safety_declaration || ""} onChange={(event) => updateSafetyAnswer(event.target.value)} className={inputClass}><option value="">Choose a response</option><option value="yes">Yes</option><option value="no">No</option><option value="confidential">Prefer to discuss confidentially</option></select></label>
+            <label className="block max-w-sm"><span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">Safety declaration</span><select value={textValue(form.safety_declaration)} onChange={(event) => updateSafetyAnswer(event.target.value)} className={inputClass}><option value="">Choose a response</option><option value="yes">Yes</option><option value="no">No</option><option value="confidential">Prefer to discuss confidentially</option></select></label>
             <p className="text-xs text-slate-500">A declaration is stored confidentially and does not establish whether a person has a criminal record or FIR.</p>
           </section>
         ) : (
           <form onSubmit={save} className="space-y-5 p-5">
             {tab === "Personal information" && <div className="grid gap-4 sm:grid-cols-2">
               {textField("full_name", "Full name")}
-              <label className="block"><span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">Email</span><input value={form.email || ""} disabled className={`${inputClass} bg-slate-50 text-slate-500 dark:bg-slate-800`} /></label>
+              <label className="block"><span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">Email</span><input value={textValue(form.email)} disabled className={`${inputClass} bg-slate-50 text-slate-500 dark:bg-slate-800`} /></label>
               {textField("phone", "Mobile number", { type: "tel" })}
               {textField("date_of_birth", "Date of birth", { type: "date" })}
-              <label className="block"><span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">Gender (optional)</span><select value={form.gender || ""} onChange={(event) => set("gender", event.target.value)} className={inputClass}><option value="">Prefer not to say</option><option>Woman</option><option>Man</option><option>Non-binary</option><option>Self-describe</option></select></label>
+              <label className="block"><span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">Gender (optional)</span><select value={textValue(form.gender)} onChange={(event) => set("gender", event.target.value)} className={inputClass}><option value="">Prefer not to say</option><option>Woman</option><option>Man</option><option>Non-binary</option><option>Self-describe</option></select></label>
               {textField("profile_image", "Profile photo URL (optional)", { type: "url" })}
             </div>}
             {tab === "Professional details" && <div className="grid gap-4 sm:grid-cols-2">
               <label className="block sm:col-span-2">
                 <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">What best describes your current profession?</span>
-                <select value={form.profession || ""} onChange={(event) => set("profession", event.target.value)} className={inputClass}>
+                <select value={textValue(form.profession)} onChange={(event) => set("profession", event.target.value)} className={inputClass}>
                   <option value="">Select profession</option>
                   {professions.map((profession) => <option key={profession} value={profession}>{profession}</option>)}
                 </select>
               </label>
               {textField("education", "Education / qualification")}
-              {(professionFields[form.profession] || [["other_profession_details", "Professional details"]]).map(([key, label, type]) => (
+              {(professionFields[textValue(form.profession)] || [["other_profession_details", "Professional details"]]).map(([key, label, type]) => (
                 <label key={key} className="block">
                   <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">{label}</span>
                   <input type={type || "text"} value={professionData[key] || ""} onChange={(event) => setProfessionDetail(key, event.target.value)} className={inputClass} />
@@ -230,7 +244,7 @@ export default function VolunteerProfile() {
               <div className="grid gap-4 sm:grid-cols-2">
                 {textField("maximum_travel_distance", "Maximum travel distance (km)", { type: "number" })}
                 <label className="flex items-center gap-2 self-end pb-3 text-sm"><input type="checkbox" checked={!!form.willing_to_travel} onChange={(event) => set("willing_to_travel", event.target.checked)} className="accent-emerald-600" />Willing to travel</label>
-                <label className="block"><span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">Paid / unpaid preference</span><select value={form.volunteering_preference || ""} onChange={(event) => set("volunteering_preference", event.target.value)} className={inputClass}><option value="">No preference</option><option value="unpaid">Unpaid</option><option value="paid">Paid</option><option value="benefits">Benefits-based</option><option value="any">Any</option></select></label>
+                <label className="block"><span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">Paid / unpaid preference</span><select value={textValue(form.volunteering_preference)} onChange={(event) => set("volunteering_preference", event.target.value)} className={inputClass}><option value="">No preference</option><option value="unpaid">Unpaid</option><option value="paid">Paid</option><option value="benefits">Benefits-based</option><option value="any">Any</option></select></label>
               </div>
             </div>}
             {tab === "Availability" && <div className="grid gap-4 sm:grid-cols-2">
@@ -238,7 +252,7 @@ export default function VolunteerProfile() {
               {textField("available_time_slots", "Preferred time slots", { placeholder: "Morning, Afternoon" })}
               <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!!form.weekday_availability} onChange={(event) => set("weekday_availability", event.target.checked)} className="accent-emerald-600" />Weekdays</label>
               <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!!form.weekend_availability} onChange={(event) => set("weekend_availability", event.target.checked)} className="accent-emerald-600" />Weekends</label>
-              <label className="block sm:col-span-2"><span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">Remote / on-site / hybrid</span><select value={form.remote_preference || ""} onChange={(event) => set("remote_preference", event.target.value)} className={inputClass}><option value="">Select preference</option><option value="any">Any</option><option value="on-site">On-site</option><option value="remote">Remote</option><option value="hybrid">Hybrid</option></select></label>
+              <label className="block sm:col-span-2"><span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">Remote / on-site / hybrid</span><select value={textValue(form.remote_preference)} onChange={(event) => set("remote_preference", event.target.value)} className={inputClass}><option value="">Select preference</option><option value="any">Any</option><option value="on-site">On-site</option><option value="remote">Remote</option><option value="hybrid">Hybrid</option></select></label>
             </div>}
             {tab === "Address" && <div className="space-y-4">
               <p className="text-sm text-slate-500">Your residential address is private and is not shown in public opportunities or recommendation results.</p>

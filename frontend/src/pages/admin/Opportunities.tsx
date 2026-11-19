@@ -2,24 +2,25 @@ import React, { useEffect, useState } from "react";
 import { api } from "../../api/client";
 import { useToast } from "../../components/Toast";
 import { Card, PageHeader, Spinner, ErrorState, EmptyState, Badge } from "../../components/UI";
+import { errorMessage, type Opportunity, type OpportunityList } from "../../api/types";
 
 export default function AdminOpportunities() {
   const { push } = useToast();
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const load = async () => {
     setLoading(true); setError("");
-    try { const d = await api.get<any>("/opportunities?status=open&page_size=100"); setItems(d.items || []); }
-    catch (e: any) { setError(e.message); } finally { setLoading(false); }
+    try { const d = await api.get<OpportunityList>("/opportunities?status=open&page_size=100"); setItems(d.items); }
+    catch (error: unknown) { setError(errorMessage(error)); } finally { setLoading(false); }
   };
   useEffect(() => { load(); }, []);
 
   const remove = async (id: number) => {
     if (!confirm("Remove this opportunity from the platform?")) return;
     try { await api.del(`/opportunities/${id}`); push("Opportunity removed", "success"); load(); }
-    catch (e: any) { push(e.message, "error"); }
+    catch (error: unknown) { push(errorMessage(error), "error"); }
   };
 
   return (

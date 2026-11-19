@@ -1,13 +1,17 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
+
 from app.core.config import settings
 from app.db.session import engine, Base, SessionLocal
 from app.db.migrations import migrate_existing_schema
-from app.api.routers import auth, users, profiles, opportunities, matching, applications, schedules, tasks, participation, feedback, analytics, assistant, saved, notifications
+from app.api.routers import (
+    analytics, applications, assistant, auth, feedback, matching, notifications,
+    opportunities, participation, profiles, saved, schedules, tasks, users,
+)
 from app.seed.seed_data import seed_if_empty
-from pathlib import Path
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
 
 app = FastAPI(title=settings.APP_NAME)
 
@@ -23,11 +27,12 @@ app.add_middleware(
 def on_startup():
     Base.metadata.create_all(bind=engine)
     migrate_existing_schema()
-    db = SessionLocal()
-    try:
-        seed_if_empty(db)
-    finally:
-        db.close()
+    if settings.SEED_DEMO_DATA:
+        db = SessionLocal()
+        try:
+            seed_if_empty(db)
+        finally:
+            db.close()
 
 app.include_router(auth.router)
 app.include_router(users.router)
@@ -44,22 +49,30 @@ app.include_router(notifications.router)
 app.include_router(analytics.router)
 app.include_router(assistant.router)
 
-# Serve React frontend
 BASE_DIR = Path(__file__).resolve().parents[2]
 FRONTEND_DIST = BASE_DIR / "frontend" / "dist"
-
-from fastapi.staticfiles import StaticFiles
-from pathlib import Path
-
-BASE_DIR = Path(__file__).resolve().parents[2]
-FRONTEND_DIST = BASE_DIR / "frontend" / "dist"
-
-app.mount(
-    "/",
-    StaticFiles(directory=str(FRONTEND_DIST), html=True),
-    name="frontend"
-)
 
 @app.get("/health")
 def health():
     return {"name": settings.APP_NAME, "status": "running"}
+
+
+if (FRONTEND_DIST / "assets").is_dir():
+    app.mount("/assets", StaticFiles(directory=str(FRONTEND_DIST / "assets")), name="frontend-assets")
+
+
+API_ROOTS = {
+    "analytics", "applications", "assistant", "auth", "feedback", "health",
+    "matching", "notifications", "opportunities", "participation", "profiles",
+    "saved", "schedules", "tasks", "users",
+}
+
+
+@app.get("/{full_path:path}", include_in_schema=False)
+async def frontend_fallback(full_path: str, request: Request):
+    first_segment = full_path.partition("/")[0]
+    if first_segment in API_ROOTS or first_segment == "api":
+        return JSONResponse(status_code=404, content={"detail": "Not Found"})
+    if not FRONTEND_DIST.is_dir() or not (FRONTEND_DIST / "index.html").is_file():
+        return JSONResponse(status_code=503, content={"detail": "Frontend build is unavailable"})
+    return FileResponse(FRONTEND_DIST / "index.html")

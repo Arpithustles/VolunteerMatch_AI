@@ -2,23 +2,24 @@ import React, { useEffect, useState } from "react";
 import { api } from "../../api/client";
 import { useToast } from "../../components/Toast";
 import { Card, PageHeader, Spinner, ErrorState, EmptyState, Badge } from "../../components/UI";
+import { errorMessage, type VolunteerApplication } from "../../api/types";
 
 export default function Applicants() {
   const { push } = useToast();
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<VolunteerApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("all");
 
   const load = async () => {
     setLoading(true); setError("");
-    try { setItems(await api.get<any[]>("/applications/ngo")); } catch (e: any) { setError(e.message); } finally { setLoading(false); }
+    try { setItems(await api.get<VolunteerApplication[]>("/applications/ngo")); } catch (error: unknown) { setError(errorMessage(error)); } finally { setLoading(false); }
   };
   useEffect(() => { load(); }, []);
 
   const update = async (id: number, status: string) => {
     try { await api.patch(`/applications/${id}`, { status }); push(`Application ${status}`, "success"); load(); }
-    catch (e: any) { push(e.message, "error"); }
+    catch (error: unknown) { push(errorMessage(error), "error"); }
   };
 
   const shown = filter === "all" ? items : items.filter((a) => a.status === filter);

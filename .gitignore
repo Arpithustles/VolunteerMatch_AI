@@ -14,6 +14,8 @@ backend/app.db
 node_modules/
 frontend/node_modules/
 frontend/dist/
+frontend/*.tsbuildinfo
+backend/test.db
 
 # IDE/OS
 .vscode/

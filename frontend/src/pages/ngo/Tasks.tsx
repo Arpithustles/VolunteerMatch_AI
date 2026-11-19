@@ -2,22 +2,23 @@ import React, { useEffect, useMemo, useState } from "react";
 import { api } from "../../api/client";
 import { useToast } from "../../components/Toast";
 import { Card, PageHeader, Spinner, ErrorState, EmptyState, Badge } from "../../components/UI";
+import { errorMessage, type Opportunity, type TaskForm, type VolunteerApplication, type VolunteerTask } from "../../api/types";
 
 export default function NgoTasks() {
   const { push } = useToast();
-  const [tasks, setTasks] = useState<any[]>([]);
-  const [opps, setOpps] = useState<any[]>([]);
-  const [apps, setApps] = useState<any[]>([]);
+  const [tasks, setTasks] = useState<VolunteerTask[]>([]);
+  const [opps, setOpps] = useState<Opportunity[]>([]);
+  const [apps, setApps] = useState<VolunteerApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [form, setForm] = useState<any>({ opportunity_id: "", assigned_to_id: "", title: "", description: "", deadline: "" });
+  const [form, setForm] = useState<TaskForm>({ opportunity_id: "", assigned_to_id: "", title: "", description: "", deadline: "" });
 
   const load = async () => {
     setLoading(true); setError("");
     try {
-      const [t, o, a] = await Promise.all([api.get<any[]>("/tasks/ngo"), api.get<any[]>("/opportunities/mine"), api.get<any[]>("/applications/ngo")]);
+      const [t, o, a] = await Promise.all([api.get<VolunteerTask[]>("/tasks/ngo"), api.get<Opportunity[]>("/opportunities/mine"), api.get<VolunteerApplication[]>("/applications/ngo")]);
       setTasks(t); setOpps(o); setApps(a);
-    } catch (e: any) { setError(e.message); } finally { setLoading(false); }
+    } catch (error: unknown) { setError(errorMessage(error)); } finally { setLoading(false); }
   };
   useEffect(() => { load(); }, []);
 
@@ -28,14 +29,14 @@ export default function NgoTasks() {
     try {
       await api.post("/tasks", { ...form, opportunity_id: Number(form.opportunity_id), assigned_to_id: form.assigned_to_id ? Number(form.assigned_to_id) : null, deadline: form.deadline || null });
       push("Task created", "success"); setForm({ opportunity_id: "", assigned_to_id: "", title: "", description: "", deadline: "" }); load();
-    } catch (e: any) { push(e.message, "error"); }
+    } catch (error: unknown) { push(errorMessage(error), "error"); }
   };
   const update = async (id: number, status: string) => {
-    try { await api.patch(`/tasks/${id}`, { status }); push("Task updated", "success"); load(); } catch (e: any) { push(e.message, "error"); }
+    try { await api.patch(`/tasks/${id}`, { status }); push("Task updated", "success"); load(); } catch (error: unknown) { push(errorMessage(error), "error"); }
   };
   const remove = async (id: number) => {
     if (!confirm("Delete this task?")) return;
-    try { await api.del(`/tasks/${id}`); push("Task deleted", "success"); load(); } catch (e: any) { push(e.message, "error"); }
+    try { await api.del(`/tasks/${id}`); push("Task deleted", "success"); load(); } catch (error: unknown) { push(errorMessage(error), "error"); }
   };
 
   const input = "w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-950 text-sm";

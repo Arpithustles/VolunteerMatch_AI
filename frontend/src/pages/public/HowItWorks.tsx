@@ -9,6 +9,7 @@ import {
   Sparkles,
   UserPlus,
   Users,
+  type LucideIcon,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -59,15 +60,16 @@ const organizerSteps = [
 ];
 
 const scoring = [
-  { label: "Skills", weight: 35 },
+  { label: "Skills", weight: 30 },
   { label: "Interests", weight: 20 },
-  { label: "Availability", weight: 20 },
-  { label: "Experience", weight: 10 },
+  { label: "Availability", weight: 15 },
   { label: "Location", weight: 10 },
+  { label: "Experience", weight: 10 },
+  { label: "Profession", weight: 10 },
   { label: "Preferences", weight: 5 },
 ];
 
-function Step({ step, index, total }: { step: { icon: any; title: string; text: string }; index: number; total: number }) {
+function Step({ step, index, total }: { step: { icon: LucideIcon; title: string; text: string }; index: number; total: number }) {
   return (
     <div className="relative flex gap-4">
       <div className="flex flex-col items-center">
@@ -225,7 +227,7 @@ export default function HowItWorks() {
                     <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
                       <div
                         className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400"
-                        style={{ width: `${factor.weight * (100 / 35)}%` }}
+                        style={{ width: `${factor.weight * 2}%` }}
                       />
                     </div>
                   </div>
